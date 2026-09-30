@@ -573,22 +573,6 @@ void connectWiFi() {
 status=6
 status=6
 status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
-status=6
 WiFi connection FAILED after 20 attempts.
 Connecting to WiFiiPhone
 status=6
