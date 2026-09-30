@@ -726,68 +726,8 @@ Executing task: platformio device monitor --- Terminal on /dev/cu.usbmodem206EF1
 Adding that measured RSSI of -92 dBm at ~5m line-of-sight — weaker than typical for this distance, likely a combination of the board's small embedded antenna and local RF conditions. Confirmed functional despite the weak signal; would investigate further (antenna placement, dedicated access point) in a production deployment.
 
 **Adding an MQTT library for Python via Buildroot**
-Python's standard library doesn't include MQTT support. I have to add python-paho-mqtt package through menuconfig. The rebuild the image, copy to the SD card and flash onto the Pi. 
+Python's standard library doesn't include MQTT support. I have to add python-paho-mqtt package through menuconfig. The rebuild the image, copy to the SD card and flash onto the Pi. See gateway.py for the appliation code. 
 
-The following script is the application code for the gateway. 
-
-```
-import json
-import sqlite3
-import time
-import paho.mqtt.client as mqtt
-
-MQTT_BROKER = "localhost"  # script runs ON the Pi, same machine as the broker
-MQTT_PORT = 1883
-MQTT_TOPIC = "sensor/room1/climate"
-
-DB_PATH = "/root/bosporus.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS readings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp INTEGER NOT NULL,
-            temperature REAL,
-            humidity REAL
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-def on_connect(client, userdata, flags, rc):
-    print(f"Connected to broker, rc={rc}")
-    client.subscribe(MQTT_TOPIC)
-
-def on_message(client, userdata, msg):
-    try:
-        payload = json.loads(msg.payload.decode())
-        temperature = payload.get("temperature")
-        humidity = payload.get("humidity")
-
-        conn = sqlite3.connect(DB_PATH)
-        conn.execute(
-            "INSERT INTO readings (timestamp, temperature, humidity) VALUES (?, ?, ?)",
-            (int(time.time()), temperature, humidity)
-        )
-        conn.commit()
-        conn.close()
-
-        print(f"Stored: temp={temperature}, humidity={humidity}")
-    except Exception as e:
-        print(f"Failed to process message: {e}")
-
-def main():
-    init_db()
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect(MQTT_BROKER, MQTT_PORT)
-    client.loop_forever()
-
-if __name__ == "__main__":
-    main()
-```
 This application, I named it as bosporus_subscriber.py, created the table for sensor data, pass the read temperature and humidty data to MQTT brocker by connecting to it, and listen continuously the sensor data which are available at the output of the ESP32 and parse the JSON file of the MQTT protocol. I created file directly in the terminal by the command **cat > ~/bosporus_subscriber.py << 'EOF'** at the beginning tof the script file. This previously named script file as **bosporus_subscriber.py** renamed later on as **gateway.py** because of the previously defined arhitecture as gateway. 
 
 After the image with python package, python-paho-mqtt has been flashed on to the Pi. While I was flashing I faced the following issue: trying accessing PI with ssh with the know IP address 192.168.1.169 resulted with permission denied. The problem was solved by running the command **ssh -keygen -R 192.168.1.169**. The issue was that SSH serve has a unique host key - a cryptographic identity. This will be deleted after each reflash. At the first time of the accessing the ssh asks, security reasons, so do you trust this device? After saying yes, the access has been granted. But after reflash, the host key is not the same and SSH refuse the access. Thefore we need to tell it with the command above handle this device as a new one so that user can confirm again the trustnees.   
