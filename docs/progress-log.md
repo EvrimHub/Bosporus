@@ -269,17 +269,17 @@ port to the router instead, which got it a real IP via DHCP: `192.168.1.169`.
 ```bash
 ssh root@192.168.1.169
 ```
-connected and prompted for a password — entering the password I'd set (`bosporus74`)
+connected and prompted for a password — entering the password I'd set (`<password>`)
 resulted in `Connection closed by 192.168.1.169 port 22`. Retyped manually (not pasted)
 — got `Permission denied, please try again` three times in a row.
 
 Debugged systematically rather than continuing to guess:
-- `grep ROOT_PASSWD .config` → confirmed `bosporus74` was genuinely saved
+- `grep ROOT_PASSWD .config` → confirmed `<password>` was genuinely saved
 - `cat output/target/etc/shadow | head -1` → confirmed a real password hash existed
 - `cat output/target/etc/init.d/S50dropbear` → checked for a `-w` flag (which would
   disable root login entirely, regardless of password) — confirmed absent
 
-Reset to a deliberately simple password (`test1234`) to rule out a typing/Caps-Lock
+Reset to a deliberately simple password (`<password>`) to rule out a typing/Caps-Lock
 issue, rebuilt, re-copied, reflashed. Still got "Permission denied." Checked
 `ls -lh ~/bosporus-sdcard.img` — confirmed the image file itself was genuinely fresh.
 
@@ -295,7 +295,7 @@ WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!
 Correctly recognized this as **expected**, not an attack: a fresh filesystem generates
 fresh SSH host keys, so this was actual proof the newest image was finally running.
 Cleared the stale entry with `ssh-keygen -R 192.168.1.169`, reconnected, accepted the
-new host key, entered `test1234` —
+new host key, entered `<password>` —
 
 **successful login to my own custom-built Buildroot Linux system.**
 
@@ -679,7 +679,7 @@ Serial.println(strlen(WIFI_PASSWORD));
 - After build, run, upload, the board has been connected to iphone wifi: status=3 with IP address 172.20.10.5.
 - After this temporarly test I have switched to home Wifi credentials. I only enabled 2.4 GHz and tested again with the result:
 ```
-Executing task: platformio device monitor --- Terminal on /dev/cu.usbmodem206EF13285D82 | 115200 8-N-1 --- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time --- More details at https://bit.ly/pio-monitor-filters --- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H status=6 status=6 status=6 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 WiFi connection FAILED after 20 attempts. Connecting to WiFiZyxel_CF21 SSID length: 10 Password length: 10 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 WiFi connection FAILED after 20 attempts. Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds... Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds... Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds... Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds...
+Executing task: platformio device monitor --- Terminal on /dev/cu.usbmodem206EF13285D82 | 115200 8-N-1 --- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time --- More details at https://bit.ly/pio-monitor-filters --- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H status=6 status=6 status=6 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 WiFi connection FAILED after 20 attempts. Connecting to WiFi<home-wifi> SSID length: 10 Password length: 10 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 status=1 WiFi connection FAILED after 20 attempts. Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds... Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds... Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds... Connecting to MQTT broker...Failed to connect to MQTT broker, rc=-2 Retrying in 5 seconds...
 ```
 Status=1 means that ESP32 cannot find my home wifi router. After this I have checked the router config and saw that 2.4 GHz and 5GHz were both enabled together. After that I have deactivated Mesh so that only 2.4 Ghz was active. Rebuild, upload with the same result status = 1. After this result I have checked the WiFi channel because ESP 32 scans wifi channels from 1-11. It was set to auto and I set it to 6. After rebuild the result was the same. To deepen the debugging I added to the code WiFi scan:
 
@@ -721,7 +721,7 @@ void setup() {
 --- More details at https://bit.ly/pio-monitor-filters
 --- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
 No networks found at all.
-Connecting to WiFiZyxel_CF21
+Connecting to WiFi<home-wifi>
 SSID length: 10
 Password length: 10
 status=6
@@ -791,12 +791,12 @@ Executing task in folder wifi-scan-test: platformio device monitor
 --- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
 Networks found: 2
 DIRECT-94-HP M140 LaserJet
-Zyxel_CF21
+<home-wifi>
 ```
 This confirmed cleanly the signal-range issue the whole time and not a bug, not a router misconfiguration and not a hardware defect. This means the sensor node needs to be reasonably close to the router. Then I have run my bosporus project and "voilà!". It connected to home WiFi and to MQTT brocker. I could not read the DHT Sensor readings because I did not correct wired up. After fixing that issue, the result:
 
 ```
-Executing task: platformio device monitor --- Terminal on /dev/cu.usbmodem206EF13285D82 | 115200 8-N-1 --- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time --- More details at https://bit.ly/pio-monitor-filters --- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H Scan returned: 1 1: Zyxel_CF21 (RSSI: -92) Connecting to WiFiZyxel_CF21 SSID length: 10 Password length: 10 status=6 status=3 WiFi connected, IP address: 192.168.1.195 Connecting to MQTT broker...Connected to MQTT broker Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.6} Publishing: 
+Executing task: platformio device monitor --- Terminal on /dev/cu.usbmodem206EF13285D82 | 115200 8-N-1 --- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time --- More details at https://bit.ly/pio-monitor-filters --- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H Scan returned: 1 1: <home-wifi> (RSSI: -92) Connecting to WiFi<home-wifi> SSID length: 10 Password length: 10 status=6 status=3 WiFi connected, IP address: 192.168.1.195 Connecting to MQTT broker...Connected to MQTT broker Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.3} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.4} Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.5} Publishing: {"temperature": 27.4, "humidity": 36.6} Publishing: 
 ```
 Adding that measured RSSI of -92 dBm at ~5m line-of-sight — weaker than typical for this distance, likely a combination of the board's small embedded antenna and local RF conditions. Confirmed functional despite the weak signal; would investigate further (antenna placement, dedicated access point) in a production deployment.
 
