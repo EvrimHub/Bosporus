@@ -99,7 +99,7 @@ connect by IP address directly, using a wired connection, which is more predicta
 
 **SW Setup**
 
-### Step 1: Prove the Pi works with standard Raspberry Pi OS
+## Step 1: Prove the Pi works with standard Raspberry Pi OS
 
 *Installation and configuration of Raspberry Pi Imager*
 
