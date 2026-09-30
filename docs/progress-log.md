@@ -820,39 +820,7 @@ listener 1883 0.0.0.0
 allow_anonymous true
 EOF
 ```
-An init script is necessary so that the gateway.py starts automatically at boot. 
-
-```
-cat > ~/bosporus-overlay/etc/init.d/S60bosporus-gateway << 'EOF'
-#!/bin/sh
-DAEMON=/usr/bin/python3
-SCRIPT=/opt/bosporus/gateway.py
-PIDFILE=/var/run/bosporus-gateway.pid
-
-start() {
-	printf "Starting bosporus-gateway: "
-	start-stop-daemon -S -q -b -m -p $PIDFILE --exec $DAEMON -- $SCRIPT
-	[ $? = 0 ] && echo "OK" || echo "FAIL"
-}
-stop() {
-	printf "Stopping bosporus-gateway: "
-	start-stop-daemon -K -q -p $PIDFILE
-	[ $? = 0 ] && echo "OK" || echo "FAIL"
-}
-restart() {
-	stop
-	start
-}
-case "$1" in
-  start) start ;;
-  stop) stop ;;
-  restart|reload) restart ;;
-  *) echo "Usage: $0 {start|stop|restart}"; exit 1 ;;
-esac
-exit $?
-EOF
-chmod +x ~/bosporus-overlay/etc/init.d/S60bosporus-gateway
-```
+An init script is necessary so that the gateway.py starts automatically at boot. See the code file s60bosporus-gateway << 'EOF'.
 After I've setup the directories on Mac I need to copy them into the docker container.
 
 ```
